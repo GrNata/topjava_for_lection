@@ -1,0 +1,201 @@
+Index: src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java	(revision 55ed059cf7f4166285bf228955f152e51b144d41)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java	(date 1616582025843)
+@@ -22,7 +22,7 @@
+ 
+     @BeforeClass
+     public static void beforeClass() {
+-        appCtx = new ClassPathXmlApplicationContext("spring/spring-app.xml", "spring/inmemory.xml");
++        appCtx = new ClassPathXmlApplicationContext("spring/inmemory.xml");
+         log.info("\n{}\n", Arrays.toString(appCtx.getBeanDefinitionNames()));
+         controller = appCtx.getBean(AdminRestController.class);
+         repository = appCtx.getBean(InMemoryUserRepository.class);
+@@ -30,7 +30,9 @@
+ 
+     @AfterClass
+     public static void afterClass() {
+-        appCtx.close();
++//        May cause during JUnit "Cache is not alive (STATUS_SHUTDOWN)" as JUnit share Spring context for speed
++//        http://stackoverflow.com/questions/16281802/ehcache-shutdown-causing-an-exception-while-running-test-suite
++//        appCtx.close();
+     }
+ 
+     @Before
+Index: src/test/java/ru/javawebinar/topjava/SpringMain.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/SpringMain.java b/src/test/java/ru/javawebinar/topjava/SpringMain.java
+--- a/src/test/java/ru/javawebinar/topjava/SpringMain.java	(revision 55ed059cf7f4166285bf228955f152e51b144d41)
++++ b/src/test/java/ru/javawebinar/topjava/SpringMain.java	(date 1616582025849)
+@@ -18,7 +18,7 @@
+         // java 7 automatic resource management (ARM)
+         try (GenericXmlApplicationContext appCtx = new GenericXmlApplicationContext()) {
+             appCtx.getEnvironment().setActiveProfiles(Profiles.getActiveDbProfile(), Profiles.REPOSITORY_IMPLEMENTATION);
+-            appCtx.load("spring/spring-app.xml", "spring/spring-db.xml");
++            appCtx.load("spring/inmemory.xml");
+             appCtx.refresh();
+ 
+             System.out.println("Bean definition names: " + Arrays.toString(appCtx.getBeanDefinitionNames()));
+Index: src/test/java/ru/javawebinar/topjava/service/AbstractMealServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/AbstractMealServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/AbstractMealServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/AbstractMealServiceTest.java	(revision 55ed059cf7f4166285bf228955f152e51b144d41)
++++ b/src/test/java/ru/javawebinar/topjava/service/AbstractMealServiceTest.java	(date 1616581991455)
+@@ -1,6 +1,7 @@
+ package ru.javawebinar.topjava.service;
+ 
+ import org.junit.Assert;
++import org.junit.Assume;
+ import org.junit.Test;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.dao.DataAccessException;
+@@ -105,6 +106,7 @@
+ 
+     @Test
+     public void createWithException() throws Exception {
++        Assume.assumeTrue("Validation not supported (JPA only)", isJpaBased());
+         validateRootCause(ConstraintViolationException.class, () -> service.create(new Meal(null, of(2015, Month.JUNE, 1, 18, 0), "  ", 300), USER_ID));
+         validateRootCause(ConstraintViolationException.class, () -> service.create(new Meal(null, null, "Description", 300), USER_ID));
+         validateRootCause(ConstraintViolationException.class, () -> service.create(new Meal(null, of(2015, Month.JUNE, 1, 18, 0), "Description", 9), USER_ID));
+Index: src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java	(revision 55ed059cf7f4166285bf228955f152e51b144d41)
++++ b/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java	(date 1616581991471)
+@@ -5,12 +5,15 @@
+ import org.junit.rules.ExternalResource;
+ import org.junit.rules.Stopwatch;
+ import org.junit.runner.RunWith;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.Environment;
+ import org.springframework.test.context.ActiveProfiles;
+ import org.springframework.test.context.ContextConfiguration;
+ import org.springframework.test.context.jdbc.Sql;
+ import org.springframework.test.context.jdbc.SqlConfig;
+ import org.springframework.test.context.junit4.SpringRunner;
+ import ru.javawebinar.topjava.ActiveDbProfileResolver;
++import ru.javawebinar.topjava.Profiles;
+ import ru.javawebinar.topjava.TimingRules;
+ 
+ import static org.junit.Assert.assertThrows;
+@@ -28,9 +31,17 @@
+     @ClassRule
+     public static ExternalResource summary = TimingRules.SUMMARY;
+ 
++    @Autowired
++    public Environment env;
++
+     @Rule
+     public Stopwatch stopwatch = TimingRules.STOPWATCH;
+ 
++    public boolean isJpaBased() {
++//        return Arrays.stream(env.getActiveProfiles()).noneMatch(Profiles.JDBC::equals);
++        return env.acceptsProfiles(org.springframework.core.env.Profiles.of(Profiles.JPA, Profiles.DATAJPA));
++    }
++
+     //  Check root cause in JUnit: https://github.com/junit-team/junit4/pull/778
+     protected <T extends Throwable> void validateRootCause(Class<T> rootExceptionClass, Runnable runnable) {
+         assertThrows(rootExceptionClass, () -> {
+Index: src/test/java/ru/javawebinar/topjava/service/AbstractUserServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/AbstractUserServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/AbstractUserServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/AbstractUserServiceTest.java	(revision 55ed059cf7f4166285bf228955f152e51b144d41)
++++ b/src/test/java/ru/javawebinar/topjava/service/AbstractUserServiceTest.java	(date 1616582136201)
+@@ -1,20 +1,22 @@
+ package ru.javawebinar.topjava.service;
+ 
++import org.junit.Assume;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.cache.CacheManager;
++import org.springframework.context.annotation.Lazy;
+ import org.springframework.dao.DataAccessException;
+ import ru.javawebinar.topjava.UserTestData;
+ import ru.javawebinar.topjava.model.Role;
+ import ru.javawebinar.topjava.model.User;
++import ru.javawebinar.topjava.repository.JpaUtil;
+ import ru.javawebinar.topjava.util.exception.NotFoundException;
+ 
+ import javax.validation.ConstraintViolationException;
+ import java.util.Date;
+ import java.util.List;
+ import java.util.Set;
+-import ru.javawebinar.topjava.repository.JpaUtil;
+ 
+ import static org.junit.Assert.assertThrows;
+ import static ru.javawebinar.topjava.UserTestData.*;
+@@ -28,12 +30,15 @@
+     private CacheManager cacheManager;
+ 
+     @Autowired
++    @Lazy
+     protected JpaUtil jpaUtil;
+ 
+     @Before
+     public void setup() {
+         cacheManager.getCache("users").clear();
+-        jpaUtil.clear2ndLevelHibernateCache();
++        if (isJpaBased()) {
++            jpaUtil.clear2ndLevelHibernateCache();
++        }
+     }
+ 
+     @Test
+@@ -95,6 +100,7 @@
+ 
+     @Test
+     public void createWithException() throws Exception {
++        Assume.assumeTrue("Validation not supported (JPA only)", isJpaBased());
+         validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "  ", "mail@yandex.ru", "password", Role.USER)));
+         validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "  ", "password", Role.USER)));
+         validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "  ", Role.USER)));
+Index: src/test/resources/spring/inmemory.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/resources/spring/inmemory.xml b/src/test/resources/spring/inmemory.xml
+--- a/src/test/resources/spring/inmemory.xml	(revision 55ed059cf7f4166285bf228955f152e51b144d41)
++++ b/src/test/resources/spring/inmemory.xml	(date 1616582025854)
+@@ -4,4 +4,6 @@
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+ 
+     <context:component-scan base-package="ru.javawebinar.topjava.**.repository.inmemory"/>
++    <context:component-scan base-package="ru.javawebinar.**.service"/>
++    <context:component-scan base-package="ru.javawebinar.topjava.**.web"/>
+ </beans>
+\ No newline at end of file
+Index: src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java	(revision 55ed059cf7f4166285bf228955f152e51b144d41)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java	(date 1616582025835)
+@@ -13,7 +13,7 @@
+ import static ru.javawebinar.topjava.UserTestData.NOT_FOUND;
+ import static ru.javawebinar.topjava.UserTestData.USER_ID;
+ 
+-@ContextConfiguration({"classpath:spring/spring-app.xml", "classpath:spring/inmemory.xml"})
++@ContextConfiguration({"classpath:spring/inmemory.xml"})
+ @RunWith(SpringRunner.class)
+ public class InMemoryAdminRestControllerSpringTest {
+ 

@@ -1,0 +1,264 @@
+Index: src/main/java/ru/javawebinar/topjava/web/user/UniqueMailValidator.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/UniqueMailValidator.java b/src/main/java/ru/javawebinar/topjava/web/user/UniqueMailValidator.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/UniqueMailValidator.java	(revision d357b6a9dd6bf423f4f1cb6add04332e4365ee68)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/UniqueMailValidator.java	(date 1619301224388)
+@@ -1,20 +1,28 @@
+ package ru.javawebinar.topjava.web.user;
+ 
+-
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.lang.Nullable;
+ import org.springframework.stereotype.Component;
++import org.springframework.util.Assert;
+ import org.springframework.util.StringUtils;
+ import org.springframework.validation.Errors;
++import org.springframework.validation.Validator;
+ import ru.javawebinar.topjava.HasIdAndEmail;
+ import ru.javawebinar.topjava.model.User;
+ import ru.javawebinar.topjava.repository.UserRepository;
+ import ru.javawebinar.topjava.web.ExceptionInfoHandler;
++import ru.javawebinar.topjava.web.SecurityUtil;
+ 
++import javax.servlet.http.HttpServletRequest;
+ 
+ @Component
+-public class UniqueMailValidator implements org.springframework.validation.Validator {
+-
++public class UniqueMailValidator implements Validator {
+     private final UserRepository repository;
+ 
++    @Autowired
++    @Nullable  // inmemory tests has no web context
++    private HttpServletRequest request;
++
+     public UniqueMailValidator(UserRepository repository) {
+         this.repository = repository;
+     }
+@@ -29,7 +37,17 @@
+         HasIdAndEmail user = ((HasIdAndEmail) target);
+         if (StringUtils.hasText(user.getEmail())) {
+             User dbUser = repository.getByEmail(user.getEmail().toLowerCase());
+-            if (dbUser != null && !dbUser.getId().equals(user.getId())) {
++            if (dbUser != null) {
++                Assert.notNull(request, "HttpServletRequest missed");
++                if (request.getMethod().equals("PUT")) {
++                    // it is ok, if update ourself
++                    int dbId = dbUser.id();
++                    if (user.getId() != null && dbId == user.id()) return;
++
++                    // workaround for update with nullable id user
++                    String requestURI = request.getRequestURI();
++                    if (requestURI.endsWith("/" + dbId) || dbId == SecurityUtil.get().getId()) return;
++                }
+                 errors.rejectValue("email", ExceptionInfoHandler.EXCEPTION_DUPLICATE_EMAIL);
+             }
+         }
+Index: src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java b/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java	(revision d357b6a9dd6bf423f4f1cb6add04332e4365ee68)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java	(date 1619298303578)
+@@ -3,32 +3,30 @@
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.MediaType;
+ import org.springframework.http.ResponseEntity;
+-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+-import org.springframework.validation.BindException;
+ import org.springframework.web.bind.annotation.*;
+ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+-import ru.javawebinar.topjava.AuthorizedUser;
+ import ru.javawebinar.topjava.model.User;
+ import ru.javawebinar.topjava.to.UserTo;
+-import springfox.documentation.annotations.ApiIgnore;
+ 
+ import javax.validation.Valid;
+ import java.net.URI;
+ 
++import static ru.javawebinar.topjava.web.SecurityUtil.authUserId;
++
+ @RestController
+ @RequestMapping(value = ProfileRestController.REST_URL, produces = MediaType.APPLICATION_JSON_VALUE)
+ public class ProfileRestController extends AbstractUserController {
+     static final String REST_URL = "/rest/profile";
+ 
+     @GetMapping
+-    public User get(@AuthenticationPrincipal @ApiIgnore AuthorizedUser authUser) {
+-        return super.get(authUser.getId());
++    public User get() {
++        return super.get(authUserId());
+     }
+ 
+     @DeleteMapping
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void delete(@AuthenticationPrincipal @ApiIgnore AuthorizedUser authUser) {
+-        super.delete(authUser.getId());
++    public void delete() {
++        super.delete(authUserId());
+     }
+ 
+     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+@@ -42,9 +40,8 @@
+ 
+     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void update(@Valid @RequestBody UserTo userTo, @AuthenticationPrincipal @ApiIgnore AuthorizedUser authUser) throws BindException {
+-        validateBeforeUpdate(userTo, authUser.getId());
+-        super.update(userTo, authUser.getId());
++    public void update(@Valid @RequestBody UserTo userTo) {
++        super.update(userTo, authUserId());
+     }
+ 
+     @GetMapping("/text")
+@@ -53,7 +50,7 @@
+     }
+ 
+     @GetMapping("/with-meals")
+-    public User getWithMeals(@AuthenticationPrincipal @ApiIgnore AuthorizedUser authUser) {
+-        return super.getWithMeals(authUser.getId());
++    public User getWithMeals() {
++        return super.getWithMeals(authUserId());
+     }
+ }
+\ No newline at end of file
+Index: src/test/resources/spring/inmemory.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/resources/spring/inmemory.xml b/src/test/resources/spring/inmemory.xml
+--- a/src/test/resources/spring/inmemory.xml	(revision d357b6a9dd6bf423f4f1cb6add04332e4365ee68)
++++ b/src/test/resources/spring/inmemory.xml	(date 1619298375562)
+@@ -8,5 +8,4 @@
+     <context:component-scan base-package="ru.javawebinar.topjava.**.web.user"/>
+     <context:component-scan base-package="ru.javawebinar.topjava.**.web.meal"/>
+     <bean class="org.springframework.security.crypto.password.NoOpPasswordEncoder" id="passwordEncoder"/>
+-    <bean id="defaultValidator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"/>
+ </beans>
+\ No newline at end of file
+Index: src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(revision d357b6a9dd6bf423f4f1cb6add04332e4365ee68)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(date 1619300935346)
+@@ -3,13 +3,8 @@
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
+-import org.springframework.beans.factory.annotation.Qualifier;
+-import org.springframework.validation.BindException;
+-import org.springframework.validation.DataBinder;
+-import org.springframework.validation.Validator;
+ import org.springframework.web.bind.WebDataBinder;
+ import org.springframework.web.bind.annotation.InitBinder;
+-import ru.javawebinar.topjava.HasId;
+ import ru.javawebinar.topjava.model.User;
+ import ru.javawebinar.topjava.service.UserService;
+ import ru.javawebinar.topjava.to.UserTo;
+@@ -24,15 +19,11 @@
+     protected final Logger log = LoggerFactory.getLogger(getClass());
+ 
+     @Autowired
+-    protected UserService service;
++    private UserService service;
+ 
+     @Autowired
+     private UniqueMailValidator emailValidator;
+ 
+-    @Autowired
+-    @Qualifier("defaultValidator")
+-    private Validator validator;
+-
+     @InitBinder
+     protected void initBinder(WebDataBinder binder) {
+         binder.addValidators(emailValidator);
+@@ -65,8 +56,15 @@
+         service.delete(id);
+     }
+ 
++    public void update(User user, int id) {
++        log.info("update {} with id={}", user, id);
++        assureIdConsistent(user, id);
++        service.update(user);
++    }
++
+     public void update(UserTo userTo, int id) {
+         log.info("update {} with id={}", userTo, id);
++        assureIdConsistent(userTo, id);
+         service.update(userTo);
+     }
+ 
+@@ -84,14 +82,4 @@
+         log.info(enabled ? "enable {}" : "disable {}", id);
+         service.enable(id, enabled);
+     }
+-
+-    protected void validateBeforeUpdate(HasId user, int id) throws BindException {
+-        assureIdConsistent(user, id);
+-        DataBinder binder = new DataBinder(user);
+-        binder.addValidators(emailValidator, validator);
+-        binder.validate();
+-        if (binder.getBindingResult().hasErrors()) {
+-            throw new BindException(binder.getBindingResult());
+-        }
+-    }
+ }
+\ No newline at end of file
+Index: src/main/resources/spring/spring-mvc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/resources/spring/spring-mvc.xml b/src/main/resources/spring/spring-mvc.xml
+--- a/src/main/resources/spring/spring-mvc.xml	(revision d357b6a9dd6bf423f4f1cb6add04332e4365ee68)
++++ b/src/main/resources/spring/spring-mvc.xml	(date 1619298322514)
+@@ -91,7 +91,4 @@
+             <property name="paramName" value="lang"/>
+         </bean>
+     </mvc:interceptors>
+-
+-    <!--    https://stackoverflow.com/a/23615478/548473-->
+-    <bean id="defaultValidator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"/>
+ </beans>
+\ No newline at end of file
+Index: src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java b/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java	(revision d357b6a9dd6bf423f4f1cb6add04332e4365ee68)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java	(date 1619300735933)
+@@ -3,7 +3,6 @@
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.MediaType;
+ import org.springframework.http.ResponseEntity;
+-import org.springframework.validation.BindException;
+ import org.springframework.web.bind.annotation.*;
+ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+ import ru.javawebinar.topjava.model.User;
+@@ -46,12 +45,11 @@
+         super.delete(id);
+     }
+ 
++    @Override
+     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void update(@Valid @RequestBody User user, @PathVariable int id) throws BindException {
+-        validateBeforeUpdate(user, id);
+-        log.info("update {} with id={}", user, id);
+-        service.update(user);
++    public void update(@Valid @RequestBody User user, @PathVariable int id) {
++        super.update(user, id);
+     }
+ 
+     @Override

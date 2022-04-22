@@ -1,0 +1,115 @@
+Index: src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(revision 0e8ca9e34670774597122ed3481edb8f08159206)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(date 1618399224466)
+@@ -30,9 +30,9 @@
+     }
+ 
+     public void create(UserTo userTo) {
+-        log.info("create from to {}", userTo);
++        log.info("create {}", userTo);
+         checkNew(userTo);
+-        create(UserUtil.createNewFromTo(userTo));
++        service.create(UserUtil.createNewFromTo(userTo));
+     }
+ 
+     public User create(User user) {
+Index: src/test/java/ru/javawebinar/topjava/web/RootControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/RootControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/RootControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/RootControllerTest.java	(revision 0e8ca9e34670774597122ed3481edb8f08159206)
++++ b/src/test/java/ru/javawebinar/topjava/web/RootControllerTest.java	(date 1618415424972)
+@@ -19,7 +19,6 @@
+                 .andDo(print())
+                 .andExpect(status().isOk())
+                 .andExpect(view().name("users"))
+-                .andExpect(forwardedUrl("/WEB-INF/jsp/users.jsp"))
+                 .andExpect(forwardedUrl("/WEB-INF/jsp/users.jsp"));
+     }
+ 
+Index: src/main/webapp/WEB-INF/jsp/login.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/WEB-INF/jsp/login.jsp b/src/main/webapp/WEB-INF/jsp/login.jsp
+--- a/src/main/webapp/WEB-INF/jsp/login.jsp	(revision 0e8ca9e34670774597122ed3481edb8f08159206)
++++ b/src/main/webapp/WEB-INF/jsp/login.jsp	(date 1618421350584)
+@@ -50,13 +50,15 @@
+             <a href="http://en.wikipedia.org/wiki/JavaServer_Pages_Standard_Tag_Library">JSTL</a>,
+             <a href="http://tomcat.apache.org/">Apache Tomcat</a>,
+             <a href="http://www.webjars.org/">WebJars</a>,
+-            <a href="http://datatables.net/">DataTables plugin</a>,
++            <a href="http://datatables.net/">DataTables</a>,
+             <a href="http://ehcache.org">EHCACHE</a>,
+             <a href="http://www.postgresql.org/">PostgreSQL</a>,
+-            <a href="http://junit.org/">JUnit</a>,
++            <a href="http://hsqldb.org/">HSQLDB</a>,
++            <a href="https://junit.org/junit5/">JUnit 5</a>,
+             <a href="http://hamcrest.org/JavaHamcrest/">Hamcrest</a>,
++            <a href="https://assertj.github.io/doc/">AssertJ</a>,
+             <a href="http://jquery.com/">jQuery</a>,
+-            <a href="http://ned.im/noty/">jQuery notification</a>,
++            <a href="https://plugins.jquery.com/">jQuery plugins</a>,
+             <a href="http://getbootstrap.com/">Bootstrap</a>.
+         </div>
+     </div>
+Index: src/main/webapp/resources/js/topjava.meals.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/resources/js/topjava.meals.js b/src/main/webapp/resources/js/topjava.meals.js
+--- a/src/main/webapp/resources/js/topjava.meals.js	(revision 0e8ca9e34670774597122ed3481edb8f08159206)
++++ b/src/main/webapp/resources/js/topjava.meals.js	(date 1618436557168)
+@@ -6,7 +6,7 @@
+     updateTable: function () {
+         $.ajax({
+             type: "GET",
+-            url: "profile/meals/filter",
++            url: mealAjaxUrl + "filter",
+             data: $("#filter").serialize()
+         }).done(updateTableByData);
+     }
+@@ -14,7 +14,7 @@
+ 
+ function clearFilter() {
+     $("#filter")[0].reset();
+-    $.get("profile/meals/", updateTableByData);
++    $.get(mealAjaxUrl, updateTableByData);
+ }
+ 
+ $(function () {
+Index: src/main/webapp/resources/js/topjava.common.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/resources/js/topjava.common.js b/src/main/webapp/resources/js/topjava.common.js
+--- a/src/main/webapp/resources/js/topjava.common.js	(revision 0e8ca9e34670774597122ed3481edb8f08159206)
++++ b/src/main/webapp/resources/js/topjava.common.js	(date 1618444781573)
+@@ -46,7 +46,6 @@
+ }
+ 
+ function save() {
+-    const form = $("#detailsForm");
+     $.ajax({
+         type: "POST",
+         url: ctx.ajaxUrl,
+@@ -83,7 +82,8 @@
+         text: "<span class='fa fa-lg fa-exclamation-circle'></span> &nbsp;" + i18n["common.errorStatus"] + ": " + jqXHR.status + (jqXHR.responseJSON ? "<br>" + jqXHR.responseJSON : ""),
+         type: "error",
+         layout: "bottomRight"
+-    }).show();
++    });
++    failedNote.show();
+ }
+ 
+ function renderEditBtn(data, type, row) {

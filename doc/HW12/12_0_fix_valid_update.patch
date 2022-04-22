@@ -1,0 +1,93 @@
+Index: src/test/java/ru/javawebinar/topjava/UserTestData.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/UserTestData.java b/src/test/java/ru/javawebinar/topjava/UserTestData.java
+--- a/src/test/java/ru/javawebinar/topjava/UserTestData.java	(revision 22212349db95f89da8573a269d00fd1c7d90269d)
++++ b/src/test/java/ru/javawebinar/topjava/UserTestData.java	(date 1619297672582)
+@@ -50,7 +50,7 @@
+         return updated;
+     }
+ 
+-    public static String jsonWithPassword(User user, String passw) {
++    public static String jsonWithPassword(Object user, String passw) {
+         return JsonUtil.writeAdditionProps(user, "password", passw);
+     }
+ }
+Index: src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(revision 22212349db95f89da8573a269d00fd1c7d90269d)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(date 1619297986418)
+@@ -7,6 +7,7 @@
+ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+ import org.springframework.transaction.annotation.Propagation;
+ import org.springframework.transaction.annotation.Transactional;
++import ru.javawebinar.topjava.UserTestData;
+ import ru.javawebinar.topjava.model.User;
+ import ru.javawebinar.topjava.service.UserService;
+ import ru.javawebinar.topjava.to.UserTo;
+@@ -74,7 +75,7 @@
+         UserTo updatedTo = new UserTo(null, "newName", "user@yandex.ru", "newPassword", 1500);
+         perform(MockMvcRequestBuilders.put(REST_URL).contentType(MediaType.APPLICATION_JSON)
+                 .with(userHttpBasic(user))
+-                .content(JsonUtil.writeValue(updatedTo)))
++                .content(jsonWithPassword(updatedTo, "newPass")))
+                 .andDo(print())
+                 .andExpect(status().isNoContent());
+ 
+Index: src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java b/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java	(revision 22212349db95f89da8573a269d00fd1c7d90269d)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java	(date 1619297509492)
+@@ -42,7 +42,7 @@
+ 
+     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void update(@RequestBody UserTo userTo, @AuthenticationPrincipal @ApiIgnore AuthorizedUser authUser) throws BindException {
++    public void update(@Valid @RequestBody UserTo userTo, @AuthenticationPrincipal @ApiIgnore AuthorizedUser authUser) throws BindException {
+         validateBeforeUpdate(userTo, authUser.getId());
+         super.update(userTo, authUser.getId());
+     }
+Index: src/test/java/ru/javawebinar/topjava/web/user/HerokuRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/HerokuRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/HerokuRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/HerokuRestControllerTest.java	(revision 22212349db95f89da8573a269d00fd1c7d90269d)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/HerokuRestControllerTest.java	(date 1619298009010)
+@@ -57,7 +57,7 @@
+         perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
+                 .contentType(MediaType.APPLICATION_JSON)
+                 .with(userHttpBasic(admin))
+-                .content(UserTestData.jsonWithPassword(user, "password")))
++                .content(jsonWithPassword(user, "password")))
+                 .andExpect(errorType(ErrorType.VALIDATION_ERROR))
+                 .andExpect(detailMessage(EXCEPTION_UPDATE_RESTRICTION))
+                 .andExpect(status().isUnprocessableEntity());
+Index: src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java b/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java	(revision 22212349db95f89da8573a269d00fd1c7d90269d)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java	(date 1619297509496)
+@@ -48,7 +48,7 @@
+ 
+     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void update(@RequestBody User user, @PathVariable int id) throws BindException {
++    public void update(@Valid @RequestBody User user, @PathVariable int id) throws BindException {
+         validateBeforeUpdate(user, id);
+         log.info("update {} with id={}", user, id);
+         service.update(user);

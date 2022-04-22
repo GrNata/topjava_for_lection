@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3b1267e0-0279-49f5-9d56-b5e53728275d" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../.travis.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../.travis.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/model/AbstractBaseEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/model/AbstractBaseEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/model/Meal.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/model/Meal.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/model/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/main/java/ru/javawebinar/topjava/util/UserMealsUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/main/resources/spring/spring-db.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../src/main/resources/spring/spring-db.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="286iGP5YsZgPKJiVZ32qPnS1Uhd" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3b1267e0-0279-49f5-9d56-b5e53728275d" name="Default Changelist" comment="" />
+      <created>1650543339599</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1650543339599</updated>
+      <workItem from="1650543342978" duration="181000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+</project>

@@ -1,0 +1,29 @@
+Index: src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java	(revision c85a3c3b12cff83eac8c7fb4f8d08bce660af5f1)
++++ b/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java	(date 1613650823374)
+@@ -38,9 +38,9 @@
+ 
+     @Test
+     public void create() {
+-        User newUser = getNew();
+-        User created = service.create(newUser);
++        User created = service.create(getNew());
+         Integer newId = created.getId();
++        User newUser = getNew();
+         newUser.setId(newId);
+         assertMatch(created, newUser);
+         assertMatch(service.get(newId), newUser);
+@@ -84,7 +84,7 @@
+     public void update() {
+         User updated = getUpdated();
+         service.update(updated);
+-        assertMatch(service.get(USER_ID), updated);
++        assertMatch(service.get(USER_ID), getUpdated());
+     }
+ 
+     @Test

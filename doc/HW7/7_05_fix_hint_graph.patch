@@ -1,0 +1,54 @@
+Index: src/main/java/ru/javawebinar/topjava/repository/jpa/JpaUserRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javawebinar/topjava/repository/jpa/JpaUserRepository.java	(revision 90a79e1da1fb6fa613eba8f8f57ce0fd40eb6b27)
++++ src/main/java/ru/javawebinar/topjava/repository/jpa/JpaUserRepository.java	(date 1605531904321)
+@@ -1,5 +1,6 @@
+ package ru.javawebinar.topjava.repository.jpa;
+ 
++import org.hibernate.jpa.QueryHints;
+ import org.springframework.dao.support.DataAccessUtils;
+ import org.springframework.stereotype.Repository;
+ import org.springframework.transaction.annotation.Transactional;
+@@ -61,6 +62,7 @@
+     public User getByEmail(String email) {
+         List<User> users = em.createNamedQuery(User.BY_EMAIL, User.class)
+                 .setParameter(1, email)
++                .setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, false)
+                 .getResultList();
+         return DataAccessUtils.singleResult(users);
+     }
+Index: src/main/resources/db/postgres.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/db/postgres.properties	(revision 90a79e1da1fb6fa613eba8f8f57ce0fd40eb6b27)
++++ src/main/resources/db/postgres.properties	(date 1605531904327)
+@@ -10,4 +10,4 @@
+ jdbc.initLocation=classpath:db/initDB.sql
+ jpa.showSql=true
+ hibernate.format_sql=true
+-hibernate.use_sql_comments=true
+\ No newline at end of file
++hibernate.use_sql_comments=false
+\ No newline at end of file
+Index: src/main/java/ru/javawebinar/topjava/repository/datajpa/CrudUserRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javawebinar/topjava/repository/datajpa/CrudUserRepository.java	(revision 90a79e1da1fb6fa613eba8f8f57ce0fd40eb6b27)
++++ src/main/java/ru/javawebinar/topjava/repository/datajpa/CrudUserRepository.java	(date 1605531904316)
+@@ -17,7 +17,8 @@
+ 
+     User getByEmail(String email);
+ 
+-    @EntityGraph(attributePaths = {"meals", "roles"})
++    //    https://stackoverflow.com/a/46013654/548473
++    @EntityGraph(attributePaths = {"meals"}, type = EntityGraph.EntityGraphType.LOAD)
+     @Query("SELECT u FROM User u WHERE u.id=?1")
+     User getWithMeals(int id);
+ }

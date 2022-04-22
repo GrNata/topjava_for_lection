@@ -1,0 +1,78 @@
+Index: src/main/resources/spring/spring-mvc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/resources/spring/spring-mvc.xml b/src/main/resources/spring/spring-mvc.xml
+--- a/src/main/resources/spring/spring-mvc.xml	(revision 4672366f8ae3de34c126a335a7e9f63718cf5e3a)
++++ b/src/main/resources/spring/spring-mvc.xml	(date 1616597970866)
+@@ -30,7 +30,7 @@
+     <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"
+           p:cacheSeconds="5"
+           p:defaultEncoding="UTF-8">
+-        <property name="basenames" value="file:///#{systemEnvironment['TOPJAVA_ROOT']}/config/messages/app"/>
++        <property name="basenames" value="file:///#{systemEnvironment[TOPJAVA_ROOT]}/config/messages/app"/>
+         <property name="fallbackToSystemLocale" value="false"/>
+     </bean>
+ </beans>
+\ No newline at end of file
+Index: src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java	(revision 4672366f8ae3de34c126a335a7e9f63718cf5e3a)
++++ b/src/test/java/ru/javawebinar/topjava/service/AbstractServiceTest.java	(date 1616598376856)
+@@ -23,7 +23,7 @@
+ @RunWith(SpringRunner.class)
+ @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
+ @ActiveProfiles(resolver = ActiveDbProfileResolver.class)
+-abstract public class AbstractServiceTest {
++public abstract class AbstractServiceTest {
+ 
+     @ClassRule
+     public static ExternalResource summary = TimingRules.SUMMARY;
+@@ -32,7 +32,7 @@
+     public Stopwatch stopwatch = TimingRules.STOPWATCH;
+ 
+     //  Check root cause in JUnit: https://github.com/junit-team/junit4/pull/778
+-    public <T extends Throwable> void validateRootCause(Class<T> rootExceptionClass, Runnable runnable) {
++    protected <T extends Throwable> void validateRootCause(Class<T> rootExceptionClass, Runnable runnable) {
+         assertThrows(rootExceptionClass, () -> {
+             try {
+                 runnable.run();
+Index: src/main/java/ru/javawebinar/topjava/repository/JpaUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/repository/JpaUtil.java b/src/main/java/ru/javawebinar/topjava/repository/JpaUtil.java
+--- a/src/main/java/ru/javawebinar/topjava/repository/JpaUtil.java	(revision 4672366f8ae3de34c126a335a7e9f63718cf5e3a)
++++ b/src/main/java/ru/javawebinar/topjava/repository/JpaUtil.java	(date 1616598284742)
+@@ -14,9 +14,8 @@
+     public void clear2ndLevelHibernateCache() {
+         Session s = (Session) em.getDelegate();
+         SessionFactory sf = s.getSessionFactory();
+-//        sf.evict(User.class);
+-//        sf.getCache().evictEntity(User.class, BaseEntity.START_SEQ);
+-//        sf.getCache().evictEntityRegion(User.class);
++//        sf.getCache().evictEntityData(User.class, AbstractBaseEntity.START_SEQ);
++//        sf.getCache().evictEntityData(User.class);
+         sf.getCache().evictAllRegions();
+     }
+ }
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision 4672366f8ae3de34c126a335a7e9f63718cf5e3a)
++++ b/.gitignore	(date 1616598415486)
+@@ -4,5 +4,3 @@
+ *.iml
+ log
+ *.patch
+-
+-

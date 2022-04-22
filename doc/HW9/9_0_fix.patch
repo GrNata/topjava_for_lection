@@ -1,0 +1,68 @@
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml	(revision de034fc3a8d6a6074cf41b0eb8860f3c45d332f7)
++++ b/pom.xml	(date 1617821227535)
+@@ -1,5 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
+ <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+     <modelVersion>4.0.0</modelVersion>
+ 
+     <groupId>ru.javawebinar</groupId>
+@@ -247,7 +248,7 @@
+                     <artifactId>jquery</artifactId>
+                 </exclusion>
+                 <exclusion>
+-<!--                https://getbootstrap.com/docs/4.5/components/popovers         -->
++                    <!--                https://getbootstrap.com/docs/4.5/components/popovers         -->
+                     <groupId>org.webjars</groupId>
+                     <artifactId>popper.js</artifactId>
+                 </exclusion>
+Index: src/main/webapp/WEB-INF/jsp/users.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/WEB-INF/jsp/users.jsp b/src/main/webapp/WEB-INF/jsp/users.jsp
+--- a/src/main/webapp/WEB-INF/jsp/users.jsp	(revision de034fc3a8d6a6074cf41b0eb8860f3c45d332f7)
++++ b/src/main/webapp/WEB-INF/jsp/users.jsp	(date 1617821148235)
+@@ -6,8 +6,8 @@
+ <html>
+ <jsp:include page="fragments/headTag.jsp"/>
+ <body>
+-<script type="text/javascript" src="resources/js/topjava.common.js" defer></script>
+-<script type="text/javascript" src="resources/js/topjava.users.js" defer></script>
++<script src="resources/js/topjava.common.js" defer></script>
++<script src="resources/js/topjava.users.js" defer></script>
+ <jsp:include page="fragments/bodyHeader.jsp"/>
+ 
+ <div class="jumbotron pt-4">
+Index: src/main/webapp/WEB-INF/jsp/fragments/headTag.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/WEB-INF/jsp/fragments/headTag.jsp b/src/main/webapp/WEB-INF/jsp/fragments/headTag.jsp
+--- a/src/main/webapp/WEB-INF/jsp/fragments/headTag.jsp	(revision de034fc3a8d6a6074cf41b0eb8860f3c45d332f7)
++++ b/src/main/webapp/WEB-INF/jsp/fragments/headTag.jsp	(date 1617366572994)
+@@ -15,9 +15,9 @@
+     <link rel="shortcut icon" href="resources/images/icon-meal.png">
+ 
+     <%--http://stackoverflow.com/a/24070373/548473--%>
+-    <script type="text/javascript" src="webjars/jquery/3.6.0/jquery.min.js" defer></script>
+-    <script type="text/javascript" src="webjars/bootstrap/4.6.0-1/js/bootstrap.min.js" defer></script>
+-    <script type="text/javascript" src="webjars/datatables/1.10.24/js/jquery.dataTables.min.js" defer></script>
+-    <script type="text/javascript" src="webjars/noty/3.1.4/lib/noty.min.js" defer></script>
+-    <script type="text/javascript" src="webjars/datatables/1.10.24/js/dataTables.bootstrap4.min.js" defer></script>
++    <script src="webjars/jquery/3.6.0/jquery.min.js" defer></script>
++    <script src="webjars/bootstrap/4.6.0-1/js/bootstrap.min.js" defer></script>
++    <script src="webjars/datatables/1.10.24/js/jquery.dataTables.min.js" defer></script>
++    <script src="webjars/noty/3.1.4/lib/noty.min.js" defer></script>
++    <script src="webjars/datatables/1.10.24/js/dataTables.bootstrap4.min.js" defer></script>
+ </head>
+\ No newline at end of file

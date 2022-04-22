@@ -1,0 +1,31 @@
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml	(revision 38eeed4b037feeb887b6c31c3a9fed72e4145914)
++++ b/pom.xml	(date 1612987070828)
+@@ -16,6 +16,8 @@
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+ 
++        <spring.version>5.3.3</spring.version>
++
+         <!-- Logging -->
+         <logback.version>1.2.3</logback.version>
+         <slf4j.version>1.7.30</slf4j.version>
+@@ -52,6 +54,13 @@
+             <version>${logback.version}</version>
+             <scope>runtime</scope>
+         </dependency>
++
++        <!-- Spring -->
++        <dependency>
++            <groupId>org.springframework</groupId>
++            <artifactId>spring-context</artifactId>
++            <version>${spring.version}</version>
++        </dependency>
+ 
+         <!--Web-->
+         <dependency>

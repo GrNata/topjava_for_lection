@@ -1,0 +1,63 @@
+Index: src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryBaseRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryBaseRepository.java b/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryBaseRepository.java
+--- a/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryBaseRepository.java	(revision e2e0903d5b19cdf914bf3b18c315ad70f23a1479)
++++ b/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryBaseRepository.java	(date 1614196693597)
+@@ -11,17 +11,17 @@
+ 
+ public class InMemoryBaseRepository<T extends AbstractBaseEntity> {
+ 
+-    private static final AtomicInteger counter = new AtomicInteger(START_SEQ);
++    static final AtomicInteger counter = new AtomicInteger(START_SEQ);
+ 
+     final Map<Integer, T> map = new ConcurrentHashMap<>();
+ 
+-    public T save(T entry) {
+-        if (entry.isNew()) {
+-            entry.setId(counter.incrementAndGet());
+-            map.put(entry.getId(), entry);
+-            return entry;
++    public T save(T entity) {
++        if (entity.isNew()) {
++            entity.setId(counter.getAndIncrement());
++            map.put(entity.getId(), entity);
++            return entity;
+         }
+-        return map.computeIfPresent(entry.getId(), (id, oldT) -> entry);
++        return map.computeIfPresent(entity.getId(), (id, oldT) -> entity);
+     }
+ 
+     public boolean delete(int id) {
+@@ -35,4 +35,8 @@
+     Collection<T> getCollection() {
+         return map.values();
+     }
++
++    void put(T entity) {
++        map.put(entity.getId(), entity);
++    }
+ }
+\ No newline at end of file
+Index: src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryUserRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryUserRepository.java b/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryUserRepository.java
+--- a/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryUserRepository.java	(revision e2e0903d5b19cdf914bf3b18c315ad70f23a1479)
++++ b/src/test/java/ru/javawebinar/topjava/repository/inmemory/InMemoryUserRepository.java	(date 1614196693600)
+@@ -18,8 +18,9 @@
+ 
+     public void init() {
+         map.clear();
+-        map.put(UserTestData.USER_ID, user);
+-        map.put(UserTestData.ADMIN_ID, admin);
++        put(user);
++        put(admin);
++        counter.getAndSet(UserTestData.ADMIN_ID + 1);
+     }
+ 
+     @Override

@@ -1,0 +1,190 @@
+Index: src/test/java/ru/javawebinar/topjava/service/datajpa/DataJpaUserServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/datajpa/DataJpaUserServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/datajpa/DataJpaUserServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/datajpa/DataJpaUserServiceTest.java	(revision 440baa1eda0273a1052e6755e349d3f9db3aae85)
++++ b/src/test/java/ru/javawebinar/topjava/service/datajpa/DataJpaUserServiceTest.java	(date 1617217218275)
+@@ -3,7 +3,6 @@
+ import org.junit.jupiter.api.Assertions;
+ import org.junit.jupiter.api.Test;
+ import org.springframework.test.context.ActiveProfiles;
+-import ru.javawebinar.topjava.MealTestData;
+ import ru.javawebinar.topjava.UserTestData;
+ import ru.javawebinar.topjava.model.User;
+ import ru.javawebinar.topjava.service.AbstractUserServiceTest;
+@@ -11,15 +10,14 @@
+ 
+ import static ru.javawebinar.topjava.Profiles.DATAJPA;
+ import static ru.javawebinar.topjava.UserTestData.ADMIN_ID;
+-import static ru.javawebinar.topjava.UserTestData.USER_MATCHER;
++import static ru.javawebinar.topjava.UserTestData.USER_WITH_MEALS_MATCHER;
+ 
+ @ActiveProfiles(DATAJPA)
+ class DataJpaUserServiceTest extends AbstractUserServiceTest {
+     @Test
+     void getWithMeals() {
+         User admin = service.getWithMeals(ADMIN_ID);
+-        USER_MATCHER.assertMatch(admin, UserTestData.admin);
+-        MealTestData.MEAL_MATCHER.assertMatch(admin.getMeals(), MealTestData.adminMeal2, MealTestData.adminMeal1);
++        USER_WITH_MEALS_MATCHER.assertMatch(admin, UserTestData.admin);
+     }
+ 
+     @Test
+Index: src/main/java/ru/javawebinar/topjava/model/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/model/User.java b/src/main/java/ru/javawebinar/topjava/model/User.java
+--- a/src/main/java/ru/javawebinar/topjava/model/User.java	(revision 440baa1eda0273a1052e6755e349d3f9db3aae85)
++++ b/src/main/java/ru/javawebinar/topjava/model/User.java	(date 1617217218264)
+@@ -146,6 +146,10 @@
+         return meals;
+     }
+ 
++    public void setMeals(List<Meal> meals) {
++        this.meals = meals;
++    }
++
+     @Override
+     public String toString() {
+         return "User{" +
+Index: src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java	(revision 440baa1eda0273a1052e6755e349d3f9db3aae85)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java	(date 1617217233126)
+@@ -85,4 +85,14 @@
+                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                 .andExpect(USER_MATCHER.contentJson(admin, user));
+     }
++
++    @Test
++    void getWithMeals() throws Exception {
++        assumeDataJpa();
++        perform(MockMvcRequestBuilders.get(REST_URL + ADMIN_ID + "/with-meals"))
++                .andExpect(status().isOk())
++                .andDo(print())
++                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
++                .andExpect(USER_WITH_MEALS_MATCHER.contentJson(admin));
++    }
+ }
+\ No newline at end of file
+Index: src/test/java/ru/javawebinar/topjava/UserTestData.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/UserTestData.java b/src/test/java/ru/javawebinar/topjava/UserTestData.java
+--- a/src/test/java/ru/javawebinar/topjava/UserTestData.java	(revision 440baa1eda0273a1052e6755e349d3f9db3aae85)
++++ b/src/test/java/ru/javawebinar/topjava/UserTestData.java	(date 1617225615799)
+@@ -5,11 +5,22 @@
+ 
+ import java.util.Collections;
+ import java.util.Date;
++import java.util.List;
+ 
++import static org.assertj.core.api.Assertions.assertThat;
++import static ru.javawebinar.topjava.MealTestData.*;
+ import static ru.javawebinar.topjava.model.AbstractBaseEntity.START_SEQ;
+ 
+ public class UserTestData {
+     public static final TestMatcher<User> USER_MATCHER = TestMatcher.usingIgnoringFieldsComparator(User.class, "registered", "meals");
++    public static TestMatcher<User> USER_WITH_MEALS_MATCHER =
++            TestMatcher.usingAssertions(User.class,
++//     No need use ignoringAllOverriddenEquals, see https://assertj.github.io/doc/#breaking-changes
++                    (a, e) -> assertThat(a).usingRecursiveComparison()
++                            .ignoringFields("registered", "meals.user").isEqualTo(e),
++                    (a, e) -> {
++                        throw new UnsupportedOperationException();
++                    });
+ 
+     public static final int USER_ID = START_SEQ;
+     public static final int ADMIN_ID = START_SEQ + 1;
+@@ -18,6 +29,11 @@
+     public static final User user = new User(USER_ID, "User", "user@yandex.ru", "password", Role.USER);
+     public static final User admin = new User(ADMIN_ID, "Admin", "admin@gmail.com", "admin", Role.ADMIN, Role.USER);
+ 
++    static {
++        user.setMeals(meals);
++        admin.setMeals(List.of(adminMeal2, adminMeal1));
++    }
++
+     public static User getNew() {
+         return new User(null, "New", "new@gmail.com", "newPass", 1555, false, new Date(), Collections.singleton(Role.USER));
+     }
+Index: src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(revision 440baa1eda0273a1052e6755e349d3f9db3aae85)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(date 1617217233136)
+@@ -45,4 +45,14 @@
+ 
+         USER_MATCHER.assertMatch(userService.get(USER_ID), updated);
+     }
++
++    @Test
++    void getWithMeals() throws Exception {
++        assumeDataJpa();
++        perform(MockMvcRequestBuilders.get(REST_URL + "/with-meals"))
++                .andExpect(status().isOk())
++                .andDo(print())
++                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
++                .andExpect(USER_WITH_MEALS_MATCHER.contentJson(user));
++    }
+ }
+\ No newline at end of file
+Index: src/test/java/ru/javawebinar/topjava/web/AbstractControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/AbstractControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/AbstractControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/AbstractControllerTest.java	(revision 440baa1eda0273a1052e6755e349d3f9db3aae85)
++++ b/src/test/java/ru/javawebinar/topjava/web/AbstractControllerTest.java	(date 1617217233142)
+@@ -1,6 +1,8 @@
+ package ru.javawebinar.topjava.web;
+ 
++import org.junit.jupiter.api.Assumptions;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.Environment;
+ import org.springframework.test.context.ActiveProfiles;
+ import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
+ import org.springframework.test.web.servlet.MockMvc;
+@@ -11,6 +13,7 @@
+ import org.springframework.web.context.WebApplicationContext;
+ import org.springframework.web.filter.CharacterEncodingFilter;
+ import ru.javawebinar.topjava.AllActiveProfileResolver;
++import ru.javawebinar.topjava.Profiles;
+ 
+ import javax.annotation.PostConstruct;
+ 
+@@ -27,6 +30,9 @@
+ 
+     private static final CharacterEncodingFilter CHARACTER_ENCODING_FILTER = new CharacterEncodingFilter();
+ 
++    @Autowired
++    public Environment env;
++
+     static {
+         CHARACTER_ENCODING_FILTER.setEncoding("UTF-8");
+         CHARACTER_ENCODING_FILTER.setForceEncoding(true);
+@@ -37,6 +43,10 @@
+     @Autowired
+     private WebApplicationContext webApplicationContext;
+ 
++    public void assumeDataJpa() {
++        Assumptions.assumeTrue(env.acceptsProfiles(org.springframework.core.env.Profiles.of(Profiles.DATAJPA)), "DATA-JPA only");
++    }
++
+     @PostConstruct
+     private void postConstruct() {
+         mockMvc = MockMvcBuilders

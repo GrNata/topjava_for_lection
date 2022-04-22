@@ -1,0 +1,25 @@
+Index: src/main/java/ru/javawebinar/topjava/repository/MealRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/repository/MealRepository.java b/src/main/java/ru/javawebinar/topjava/repository/MealRepository.java
+--- a/src/main/java/ru/javawebinar/topjava/repository/MealRepository.java	(revision 51a8dd424e980adda8bd73cc17f251c69e1466fa)
++++ b/src/main/java/ru/javawebinar/topjava/repository/MealRepository.java	(date 1613139244284)
+@@ -5,13 +5,13 @@
+ import java.util.Collection;
+ 
+ public interface MealRepository {
+-    // null if updated meal do not belong to userId
++    // null if updated meal does not belong to userId
+     Meal save(Meal meal);
+ 
+-    // false if meal do not belong to userId
++    // false if meal does not belong to userId
+     boolean delete(int id);
+ 
+-    // null if meal do not belong to userId
++    // null if meal does not belong to userId
+     Meal get(int id);
+ 
+     // ORDERED dateTime desc

@@ -1,0 +1,95 @@
+Index: src/test/java/ru/javawebinar/topjava/SpringMain.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/java/ru/javawebinar/topjava/SpringMain.java	(revision 975c10ad0a42dd090d2fd6f197e857be2b988dfb)
++++ src/test/java/ru/javawebinar/topjava/SpringMain.java	(date 1593034529106)
+@@ -17,7 +17,7 @@
+ public class SpringMain {
+     public static void main(String[] args) {
+         // java 7 automatic resource management
+-        try (ConfigurableApplicationContext appCtx = new ClassPathXmlApplicationContext("spring/spring-app.xml")) {
++        try (ConfigurableApplicationContext appCtx = new ClassPathXmlApplicationContext("spring/spring-app.xml", "spring/inmemory.xml")) {
+             System.out.println("Bean definition names: " + Arrays.toString(appCtx.getBeanDefinitionNames()));
+             AdminRestController adminUserController = appCtx.getBean(AdminRestController.class);
+             adminUserController.create(new User(null, "userName", "email@mail.ru", "password", Role.ADMIN));
+Index: src/test/resources/spring/inmemory.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/resources/spring/inmemory.xml	(date 1593034529109)
++++ src/test/resources/spring/inmemory.xml	(date 1593034529109)
+@@ -0,0 +1,7 @@
++<beans xmlns="http://www.springframework.org/schema/beans"
++       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++       xmlns:context="http://www.springframework.org/schema/context"
++       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
++
++    <context:component-scan base-package="ru.javawebinar.topjava.**.repository.inmemory"/>
++</beans>
+\ No newline at end of file
+Index: src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java	(revision 975c10ad0a42dd090d2fd6f197e857be2b988dfb)
++++ src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java	(date 1593034529101)
+@@ -22,7 +22,7 @@
+ 
+     @BeforeClass
+     public static void beforeClass() {
+-        appCtx = new ClassPathXmlApplicationContext("spring/spring-app.xml");
++        appCtx = new ClassPathXmlApplicationContext("spring/spring-app.xml", "spring/inmemory.xml");
+         log.info("\n{}\n", Arrays.toString(appCtx.getBeanDefinitionNames()));
+         controller = appCtx.getBean(AdminRestController.class);
+         repository = appCtx.getBean(InMemoryUserRepository.class);
+Index: src/main/resources/spring/spring-app.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/spring/spring-app.xml	(revision 975c10ad0a42dd090d2fd6f197e857be2b988dfb)
++++ src/main/resources/spring/spring-app.xml	(date 1593034776313)
+@@ -9,7 +9,6 @@
+         <constructor-arg name="repository" ref="inmemoryUserRepository"/>
+     </bean>
+ -->
+-    <context:component-scan base-package="ru.javawebinar.**.repository.jdbc"/>
+ 
+     <context:component-scan base-package="ru.javawebinar.**.service"/>
+ 
+Index: src/main/resources/spring/spring-db.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/spring/spring-db.xml	(revision 975c10ad0a42dd090d2fd6f197e857be2b988dfb)
++++ src/main/resources/spring/spring-db.xml	(date 1593034529091)
+@@ -17,6 +17,8 @@
+         <property name="staticMethod" value="org.slf4j.bridge.SLF4JBridgeHandler.install" />
+     </bean>
+ 
++    <context:component-scan base-package="ru.javawebinar.**.repository.jdbc"/>
++
+     <jdbc:initialize-database data-source="dataSource" enabled="${database.init}">
+         <jdbc:script location="classpath:db/initDB.sql"/>
+         <jdbc:script encoding="utf-8" location="classpath:db/populateDB.sql"/>
+Index: src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java	(revision 975c10ad0a42dd090d2fd6f197e857be2b988dfb)
++++ src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java	(date 1593034529096)
+@@ -13,7 +13,7 @@
+ import static ru.javawebinar.topjava.UserTestData.NOT_FOUND;
+ import static ru.javawebinar.topjava.UserTestData.USER_ID;
+ 
+-@ContextConfiguration("classpath:spring/spring-app.xml")
++@ContextConfiguration({"classpath:spring/spring-app.xml", "classpath:spring/inmemory.xml"})
+ @RunWith(SpringRunner.class)
+ public class InMemoryAdminRestControllerSpringTest {
+ 

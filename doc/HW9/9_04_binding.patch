@@ -1,0 +1,211 @@
+Index: src/main/java/ru/javawebinar/topjava/web/user/AdminUIController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AdminUIController.java b/src/main/java/ru/javawebinar/topjava/web/user/AdminUIController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AdminUIController.java	(revision 02935d960db961c5483b0e77e65748a199fd5a55)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AdminUIController.java	(date 1617823915310)
+@@ -3,8 +3,8 @@
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.MediaType;
+ import org.springframework.web.bind.annotation.*;
+-import ru.javawebinar.topjava.model.Role;
+ import ru.javawebinar.topjava.model.User;
++import ru.javawebinar.topjava.to.UserTo;
+ 
+ import java.util.List;
+ 
+@@ -27,10 +27,8 @@
+ 
+     @PostMapping
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void create(@RequestParam String name,
+-                       @RequestParam String email,
+-                       @RequestParam String password) {
+-        super.create(new User(null, name, email, password, Role.USER));
++    public void create(UserTo userTo) {
++        super.create(userTo);
+     }
+ 
+     @Override
+Index: src/main/java/ru/javawebinar/topjava/web/SecurityUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/SecurityUtil.java b/src/main/java/ru/javawebinar/topjava/web/SecurityUtil.java
+--- a/src/main/java/ru/javawebinar/topjava/web/SecurityUtil.java	(revision 02935d960db961c5483b0e77e65748a199fd5a55)
++++ b/src/main/java/ru/javawebinar/topjava/web/SecurityUtil.java	(date 1617823915315)
+@@ -2,7 +2,7 @@
+ 
+ import ru.javawebinar.topjava.model.AbstractBaseEntity;
+ 
+-import static ru.javawebinar.topjava.util.MealsUtil.DEFAULT_CALORIES_PER_DAY;
++import static ru.javawebinar.topjava.util.UserUtil.DEFAULT_CALORIES_PER_DAY;
+ 
+ public class SecurityUtil {
+ 
+Index: src/main/java/ru/javawebinar/topjava/to/UserTo.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/to/UserTo.java b/src/main/java/ru/javawebinar/topjava/to/UserTo.java
+new file mode 100644
+--- /dev/null	(date 1617823915292)
++++ b/src/main/java/ru/javawebinar/topjava/to/UserTo.java	(date 1617823915292)
+@@ -0,0 +1,66 @@
++package ru.javawebinar.topjava.to;
++
++public class UserTo {
++    private Integer id;
++
++    private String name;
++
++    private String email;
++
++    private String password;
++
++    public UserTo() {
++    }
++
++    public UserTo(Integer id, String name, String email, String password) {
++        this.id = id;
++        this.name = name;
++        this.email = email;
++        this.password = password;
++    }
++
++    public Integer getId() {
++        return id;
++    }
++
++    public void setId(Integer id) {
++        this.id = id;
++    }
++
++    public String getPassword() {
++        return password;
++    }
++
++    public void setPassword(String password) {
++        this.password = password;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public void setName(String name) {
++        this.name = name;
++    }
++
++    public String getEmail() {
++        return email;
++    }
++
++    public void setEmail(String email) {
++        this.email = email;
++    }
++
++    public boolean isNew() {
++        return id == null;
++    }
++
++    @Override
++    public String toString() {
++        return "UserTo{" +
++                "id=" + id +
++                ", name='" + name + '\'' +
++                ", email='" + email + '\'' +
++                '}';
++    }
++}
+Index: src/main/java/ru/javawebinar/topjava/util/UserUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/util/UserUtil.java b/src/main/java/ru/javawebinar/topjava/util/UserUtil.java
+new file mode 100644
+--- /dev/null	(date 1617823915300)
++++ b/src/main/java/ru/javawebinar/topjava/util/UserUtil.java	(date 1617823915300)
+@@ -0,0 +1,14 @@
++package ru.javawebinar.topjava.util;
++
++import ru.javawebinar.topjava.model.Role;
++import ru.javawebinar.topjava.model.User;
++import ru.javawebinar.topjava.to.UserTo;
++
++public class UserUtil {
++
++    public static final int DEFAULT_CALORIES_PER_DAY = 2000;
++
++    public static User createNewFromTo(UserTo userTo) {
++        return new User(null, userTo.getName(), userTo.getEmail().toLowerCase(), userTo.getPassword(), Role.USER);
++    }
++}
+\ No newline at end of file
+Index: src/main/java/ru/javawebinar/topjava/util/MealsUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/util/MealsUtil.java b/src/main/java/ru/javawebinar/topjava/util/MealsUtil.java
+--- a/src/main/java/ru/javawebinar/topjava/util/MealsUtil.java	(revision 02935d960db961c5483b0e77e65748a199fd5a55)
++++ b/src/main/java/ru/javawebinar/topjava/util/MealsUtil.java	(date 1617823915297)
+@@ -12,7 +12,6 @@
+ import java.util.stream.Collectors;
+ 
+ public class MealsUtil {
+-    public static final int DEFAULT_CALORIES_PER_DAY = 2000;
+ 
+     private MealsUtil() {
+     }
+Index: src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(revision 02935d960db961c5483b0e77e65748a199fd5a55)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(date 1617823915304)
+@@ -5,6 +5,8 @@
+ import org.springframework.beans.factory.annotation.Autowired;
+ import ru.javawebinar.topjava.model.User;
+ import ru.javawebinar.topjava.service.UserService;
++import ru.javawebinar.topjava.to.UserTo;
++import ru.javawebinar.topjava.util.UserUtil;
+ 
+ import java.util.List;
+ 
+@@ -27,6 +29,11 @@
+         return service.get(id);
+     }
+ 
++    public void create(UserTo userTo) {
++        log.info("create from to {}", userTo);
++        create(UserUtil.createNewFromTo(userTo));
++    }
++
+     public User create(User user) {
+         log.info("create {}", user);
+         checkNew(user);
+Index: src/main/java/ru/javawebinar/topjava/model/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/model/User.java b/src/main/java/ru/javawebinar/topjava/model/User.java
+--- a/src/main/java/ru/javawebinar/topjava/model/User.java	(revision 02935d960db961c5483b0e77e65748a199fd5a55)
++++ b/src/main/java/ru/javawebinar/topjava/model/User.java	(date 1617823915288)
+@@ -18,7 +18,7 @@
+ import javax.validation.constraints.Size;
+ import java.util.*;
+ 
+-import static ru.javawebinar.topjava.util.MealsUtil.DEFAULT_CALORIES_PER_DAY;
++import static ru.javawebinar.topjava.util.UserUtil.DEFAULT_CALORIES_PER_DAY;
+ 
+ @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+ @NamedQueries({

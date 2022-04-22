@@ -1,0 +1,214 @@
+Index: src/test/java/ru/javawebinar/topjava/UserTestData.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/UserTestData.java b/src/test/java/ru/javawebinar/topjava/UserTestData.java
+--- a/src/test/java/ru/javawebinar/topjava/UserTestData.java	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/test/java/ru/javawebinar/topjava/UserTestData.java	(date 1618669803027)
+@@ -41,10 +41,7 @@
+ 
+     public static User getUpdated() {
+         User updated = new User(user);
+-
+-//      TODO comment for fail AdminRestControllerTest.update
+-        updated.setEmail("update@gmail.com");
+-
++//        updated.setEmail("update@gmail.com");
+         updated.setName("UpdatedName");
+         updated.setCaloriesPerDay(330);
+         updated.setPassword("newPass");
+Index: src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AbstractUserController.java	(date 1618669783298)
+@@ -3,8 +3,13 @@
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.beans.factory.annotation.Qualifier;
++import org.springframework.validation.BindException;
++import org.springframework.validation.DataBinder;
++import org.springframework.validation.Validator;
+ import org.springframework.web.bind.WebDataBinder;
+ import org.springframework.web.bind.annotation.InitBinder;
++import ru.javawebinar.topjava.HasId;
+ import ru.javawebinar.topjava.model.User;
+ import ru.javawebinar.topjava.service.UserService;
+ import ru.javawebinar.topjava.to.UserTo;
+@@ -19,11 +24,15 @@
+     protected final Logger log = LoggerFactory.getLogger(getClass());
+ 
+     @Autowired
+-    private UserService service;
++    protected UserService service;
+ 
+     @Autowired
+     private UniqueMailValidator emailValidator;
+ 
++    @Autowired
++    @Qualifier("defaultValidator")
++    private Validator validator;
++
+     @InitBinder
+     protected void initBinder(WebDataBinder binder) {
+         binder.addValidators(emailValidator);
+@@ -56,15 +65,8 @@
+         service.delete(id);
+     }
+ 
+-    public void update(User user, int id) {
+-        log.info("update {} with id={}", user, id);
+-        assureIdConsistent(user, id);
+-        service.update(user);
+-    }
+-
+     public void update(UserTo userTo, int id) {
+         log.info("update {} with id={}", userTo, id);
+-        assureIdConsistent(userTo, id);
+         service.update(userTo);
+     }
+ 
+@@ -82,4 +84,14 @@
+         log.info(enabled ? "enable {}" : "disable {}", id);
+         service.enable(id, enabled);
+     }
++
++    protected void validateBeforeUpdate(HasId user, int id) throws BindException {
++        assureIdConsistent(user, id);
++        DataBinder binder = new DataBinder(user);
++        binder.addValidators(emailValidator, validator);
++        binder.validate();
++        if (binder.getBindingResult().hasErrors()) {
++            throw new BindException(binder.getBindingResult());
++        }
++    }
+ }
+\ No newline at end of file
+Index: src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java b/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/AdminRestController.java	(date 1618669783303)
+@@ -3,6 +3,7 @@
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.MediaType;
+ import org.springframework.http.ResponseEntity;
++import org.springframework.validation.BindException;
+ import org.springframework.web.bind.annotation.*;
+ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+ import ru.javawebinar.topjava.model.User;
+@@ -45,11 +46,12 @@
+         super.delete(id);
+     }
+ 
+-    @Override
+     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void update(@Valid @RequestBody User user, @PathVariable int id) {
+-        super.update(user, id);
++    public void update(@RequestBody User user, @PathVariable int id) throws BindException {
++        validateBeforeUpdate(user, id);
++        log.info("update {} with id={}", user, id);
++        service.update(user);
+     }
+ 
+     @Override
+Index: src/test/resources/spring/inmemory.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/resources/spring/inmemory.xml b/src/test/resources/spring/inmemory.xml
+--- a/src/test/resources/spring/inmemory.xml	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/test/resources/spring/inmemory.xml	(date 1618669883057)
+@@ -8,4 +8,5 @@
+     <context:component-scan base-package="ru.javawebinar.topjava.**.web.user"/>
+     <context:component-scan base-package="ru.javawebinar.topjava.**.web.meal"/>
+     <bean class="org.springframework.security.crypto.password.NoOpPasswordEncoder" id="passwordEncoder"/>
++    <bean id="defaultValidator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"/>
+ </beans>
+\ No newline at end of file
+Index: src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/AdminRestControllerTest.java	(date 1618669783321)
+@@ -97,6 +97,7 @@
+                 .contentType(MediaType.APPLICATION_JSON)
+                 .with(userHttpBasic(admin))
+                 .content(jsonWithPassword(updated, "newPass")))
++                .andDo(print())
+                 .andExpect(status().isNoContent());
+ 
+         USER_MATCHER.assertMatch(userService.get(USER_ID), getUpdated());
+Index: src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java b/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/ProfileRestController.java	(date 1618669783308)
+@@ -3,6 +3,7 @@
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.MediaType;
+ import org.springframework.http.ResponseEntity;
++import org.springframework.validation.BindException;
+ import org.springframework.web.bind.annotation.*;
+ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+ import ru.javawebinar.topjava.model.User;
+@@ -40,7 +41,8 @@
+ 
+     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+-    public void update(@Valid @RequestBody UserTo userTo) {
++    public void update(@RequestBody UserTo userTo) throws BindException {
++        validateBeforeUpdate(userTo, authUserId());
+         super.update(userTo, authUserId());
+     }
+ 
+Index: src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(date 1618669783326)
+@@ -71,7 +71,7 @@
+ 
+     @Test
+     void update() throws Exception {
+-        UserTo updatedTo = new UserTo(null, "newName", "newemail@ya.ru", "newPassword", 1500);
++        UserTo updatedTo = new UserTo(null, "newName", "user@yandex.ru", "newPassword", 1500);
+         perform(MockMvcRequestBuilders.put(REST_URL).contentType(MediaType.APPLICATION_JSON)
+                 .with(userHttpBasic(user))
+                 .content(JsonUtil.writeValue(updatedTo)))
+Index: src/main/resources/spring/spring-mvc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/resources/spring/spring-mvc.xml b/src/main/resources/spring/spring-mvc.xml
+--- a/src/main/resources/spring/spring-mvc.xml	(revision 53977cb8ce66e4befe93f1ba7582f899ef4217d1)
++++ b/src/main/resources/spring/spring-mvc.xml	(date 1618669783313)
+@@ -77,4 +77,7 @@
+     <mvc:interceptors>
+         <bean class="ru.javawebinar.topjava.web.interceptor.ModelInterceptor"/>
+     </mvc:interceptors>
++
++    <!--    https://stackoverflow.com/a/23615478/548473-->
++    <bean id="defaultValidator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"/>
+ </beans>
+\ No newline at end of file

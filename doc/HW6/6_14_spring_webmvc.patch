@@ -1,0 +1,250 @@
+Index: src/main/java/ru/javawebinar/topjava/web/UserServlet.java
+===================================================================
+--- src/main/java/ru/javawebinar/topjava/web/UserServlet.java	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
++++ src/main/java/ru/javawebinar/topjava/web/UserServlet.java	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
+@@ -1,42 +0,0 @@
+-package ru.javawebinar.topjava.web;
+-
+-import org.slf4j.Logger;
+-import org.springframework.web.context.WebApplicationContext;
+-import org.springframework.web.context.support.WebApplicationContextUtils;
+-import ru.javawebinar.topjava.web.user.AdminRestController;
+-
+-import javax.servlet.ServletConfig;
+-import javax.servlet.ServletException;
+-import javax.servlet.http.HttpServlet;
+-import javax.servlet.http.HttpServletRequest;
+-import javax.servlet.http.HttpServletResponse;
+-import java.io.IOException;
+-
+-import static org.slf4j.LoggerFactory.getLogger;
+-
+-public class UserServlet extends HttpServlet {
+-    private static final Logger log = getLogger(UserServlet.class);
+-
+-    private AdminRestController adminController;
+-
+-    @Override
+-    public void init(ServletConfig config) throws ServletException {
+-        super.init(config);
+-        WebApplicationContext springContext = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
+-        adminController = springContext.getBean(AdminRestController.class);
+-    }
+-
+-    @Override
+-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+-        int userId = Integer.parseInt(request.getParameter("userId"));
+-        SecurityUtil.setAuthUserId(userId);
+-        response.sendRedirect("meals");
+-    }
+-
+-    @Override
+-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+-        log.debug("getAll");
+-        request.setAttribute("users", adminController.getAll());
+-        request.getRequestDispatcher("/users.jsp").forward(request, response);
+-    }
+-}
+Index: src/main/webapp/WEB-INF/web.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/WEB-INF/web.xml	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
++++ src/main/webapp/WEB-INF/web.xml	(date 1594060137872)
+@@ -19,27 +19,21 @@
+         </param-value>
+     </context-param>
+ 
++    <!-- Spring MVC -->
+     <listener>
+         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+     </listener>
+     <servlet>
+-        <servlet-name>userServlet</servlet-name>
+-        <servlet-class>ru.javawebinar.topjava.web.UserServlet</servlet-class>
+-        <load-on-startup>0</load-on-startup>
++        <servlet-name>mvc-dispatcher</servlet-name>
++        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
++        <init-param>
++            <param-name>contextConfigLocation</param-name>
++            <param-value>classpath:spring/spring-mvc.xml</param-value>
++        </init-param>
++        <load-on-startup>1</load-on-startup>
+     </servlet>
+     <servlet-mapping>
+-        <servlet-name>userServlet</servlet-name>
+-        <url-pattern>/users</url-pattern>
+-    </servlet-mapping>
+-
+-    <servlet>
+-        <servlet-name>mealServlet</servlet-name>
+-        <servlet-class>ru.javawebinar.topjava.web.MealServlet</servlet-class>
+-        <load-on-startup>0</load-on-startup>
+-    </servlet>
+-    <servlet-mapping>
+-        <servlet-name>mealServlet</servlet-name>
+-        <url-pattern>/meals</url-pattern>
++        <servlet-name>mvc-dispatcher</servlet-name>
++        <url-pattern>/</url-pattern>
+     </servlet-mapping>
+-
+ </web-app>
+Index: src/main/java/ru/javawebinar/topjava/web/RootController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/ru/javawebinar/topjava/web/RootController.java	(date 1594060137446)
++++ src/main/java/ru/javawebinar/topjava/web/RootController.java	(date 1594060137446)
+@@ -0,0 +1,34 @@
++package ru.javawebinar.topjava.web;
++
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.stereotype.Controller;
++import org.springframework.ui.Model;
++import org.springframework.web.bind.annotation.GetMapping;
++import org.springframework.web.bind.annotation.PostMapping;
++import ru.javawebinar.topjava.service.UserService;
++
++import javax.servlet.http.HttpServletRequest;
++
++@Controller
++public class RootController {
++    @Autowired
++    private UserService service;
++
++    @GetMapping("/")
++    public String root() {
++        return "index";
++    }
++
++    @GetMapping("/users")
++    public String getUsers(Model model) {
++        model.addAttribute("users", service.getAll());
++        return "users";
++    }
++
++    @PostMapping("/users")
++    public String setUser(HttpServletRequest request) {
++        int userId = Integer.parseInt(request.getParameter("userId"));
++        SecurityUtil.setAuthUserId(userId);
++        return "redirect:meals";
++    }
++}
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- pom.xml	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
++++ pom.xml	(date 1594060137878)
+@@ -199,7 +199,7 @@
+ 
+         <dependency>
+             <groupId>org.springframework</groupId>
+-            <artifactId>spring-web</artifactId>
++            <artifactId>spring-webmvc</artifactId>
+         </dependency>
+ 
+         <!--Test-->
+Index: src/main/resources/spring/spring-app.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/spring/spring-app.xml	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
++++ src/main/resources/spring/spring-app.xml	(date 1594060137456)
+@@ -12,7 +12,4 @@
+     <import resource="spring-cache.xml"/>
+ 
+     <context:component-scan base-package="ru.javawebinar.**.service"/>
+-
+-    <context:component-scan base-package="ru.javawebinar.**.web"/>
+-
+ </beans>
+\ No newline at end of file
+Index: src/main/resources/spring/spring-mvc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/spring/spring-mvc.xml	(date 1594060137460)
++++ src/main/resources/spring/spring-mvc.xml	(date 1594060137460)
+@@ -0,0 +1,18 @@
++<beans xmlns="http://www.springframework.org/schema/beans"
++       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++       xmlns:context="http://www.springframework.org/schema/context"
++       xmlns:p="http://www.springframework.org/schema/p" xmlns:mvc="http://www.springframework.org/schema/mvc"
++       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
++       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
++
++    <mvc:annotation-driven/>
++
++    <context:component-scan base-package="ru.javawebinar.**.web"/>
++
++    <!--  all resources inside folder src/main/webapp/resources are mapped so they can be referred to inside JSP files -->
++    <mvc:resources mapping="/resources/**" location="/resources/"/>
++
++    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"
++          p:prefix="/WEB-INF/jsp/"
++          p:suffix=".jsp"/>
++</beans>
+\ No newline at end of file
+Index: src/main/webapp/fragments/bodyHeader.jsp
+===================================================================
+--- src/main/webapp/fragments/bodyHeader.jsp	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
++++ src/main/webapp/WEB-INF/jsp/fragments/bodyHeader.jsp	(date 1594060137563)
+@@ -3,5 +3,5 @@
+ 
+ <fmt:setBundle basename="messages.app"/>
+ <header>
+-    <a href="meals"><fmt:message key="app.title"/></a> | <a href="users"><fmt:message key="user.title"/></a> | <a href="index.jsp"><fmt:message key="app.home"/></a>
++    <a href="meals"><fmt:message key="app.title"/></a> | <a href="users"><fmt:message key="user.title"/></a> | <a href="${pageContext.request.contextPath}"><fmt:message key="app.home"/></a>
+ </header>
+\ No newline at end of file
+Index: src/main/resources/logback.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/logback.xml	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
++++ src/main/resources/logback.xml	(date 1594060137464)
+@@ -21,6 +21,7 @@
+     </appender>
+ 
+     <logger name="ru.javawebinar.topjava" level="debug"/>
++    <logger name="org.springframework.web.servlet" level="debug"/>
+ 
+     <root level="info">
+         <appender-ref ref="file"/>
+Index: src/main/webapp/fragments/headTag.jsp
+===================================================================
+--- src/main/webapp/fragments/headTag.jsp	(revision 65c41017de43f8d48048c8c038b6c7a78a6c0b38)
++++ src/main/webapp/WEB-INF/jsp/fragments/headTag.jsp	(date 1594060137655)
+@@ -6,5 +6,5 @@
+ <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+     <title><fmt:message key="app.title"/></title>
+-    <link rel="stylesheet" href="css/style.css">
++    <link rel="stylesheet" href="resources/css/style.css">
+ </head>
+\ No newline at end of file
+diff --git src/main/webapp/css/style.css src/main/webapp/resources/css/style.css
+rename from src/main/webapp/css/style.css
+rename to src/main/webapp/resources/css/style.css
+diff --git src/main/webapp/mealForm.jsp src/main/webapp/WEB-INF/jsp/mealForm.jsp
+rename from src/main/webapp/mealForm.jsp
+rename to src/main/webapp/WEB-INF/jsp/mealForm.jsp
+diff --git src/main/webapp/meals.jsp src/main/webapp/WEB-INF/jsp/meals.jsp
+rename from src/main/webapp/meals.jsp
+rename to src/main/webapp/WEB-INF/jsp/meals.jsp
+diff --git src/main/webapp/users.jsp src/main/webapp/WEB-INF/jsp/users.jsp
+rename from src/main/webapp/users.jsp
+rename to src/main/webapp/WEB-INF/jsp/users.jsp
+diff --git src/main/webapp/fragments/footer.jsp src/main/webapp/WEB-INF/jsp/fragments/footer.jsp
+rename from src/main/webapp/fragments/footer.jsp
+rename to src/main/webapp/WEB-INF/jsp/fragments/footer.jsp
+diff --git src/main/webapp/index.jsp src/main/webapp/WEB-INF/jsp/index.jsp
+rename from src/main/webapp/index.jsp
+rename to src/main/webapp/WEB-INF/jsp/index.jsp

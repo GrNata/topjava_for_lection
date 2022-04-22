@@ -1,0 +1,72 @@
+Index: src/main/webapp/resources/js/topjava.meals.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/resources/js/topjava.meals.js b/src/main/webapp/resources/js/topjava.meals.js
+--- a/src/main/webapp/resources/js/topjava.meals.js	(revision 970d35888be3c85e50a5eb60e2a21e9921140b0d)
++++ b/src/main/webapp/resources/js/topjava.meals.js	(date 1618447460196)
+@@ -17,17 +17,28 @@
+     $.get(mealAjaxUrl, updateTableByData);
+ }
+ 
++// http://api.jquery.com/jQuery.ajax/#using-converters
++$.ajaxSetup({
++    converters: {
++        "text json": function (stringData) {
++            var json = JSON.parse(stringData);
++            if (typeof json === 'object') {
++                $(json).each(function () {
++                    if (this.hasOwnProperty('dateTime')) {
++                        this.dateTime = this.dateTime.substr(0, 16).replace('T', ' ');
++                    }
++                });
++            }
++            return json;
++        }
++    }
++});
++
+ $(function () {
+     makeEditable({
+         "columns": [
+             {
+-                "data": "dateTime",
+-                "render": function (date, type, row) {
+-                    if (type === 'display') {
+-                        return formatDate(date);
+-                    }
+-                    return date;
+-                }
++                "data": "dateTime"
+             },
+             {
+                 "data": "description"
+Index: src/main/webapp/resources/js/topjava.common.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/resources/js/topjava.common.js b/src/main/webapp/resources/js/topjava.common.js
+--- a/src/main/webapp/resources/js/topjava.common.js	(revision 970d35888be3c85e50a5eb60e2a21e9921140b0d)
++++ b/src/main/webapp/resources/js/topjava.common.js	(date 1618447376380)
+@@ -34,18 +34,12 @@
+     $("#modalTitle").html(i18n["editTitle"]);
+     $.get(ctx.ajaxUrl + id, function (data) {
+         $.each(data, function (key, value) {
+-            form.find("input[name='" + key + "']").val(
+-                key === "dateTime" ? formatDate(value) : value
+-            );
++            form.find("input[name='" + key + "']").val(value);
+         });
+         $('#editRow').modal();
+     });
+ }
+ 
+-function formatDate(date) {
+-    return date.replace('T', ' ').substr(0, 16);
+-}
+-
+ function deleteRow(id) {
+     if (confirm(i18n['common.confirm'])) {
+         $.ajax({

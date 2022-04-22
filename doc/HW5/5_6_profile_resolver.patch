@@ -1,0 +1,86 @@
+Index: src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java	(revision 04eb8d6467d96036963728ee2b9fd7fc2d21afba)
++++ b/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java	(date 1614779051739)
+@@ -26,7 +26,7 @@
+ })
+ @RunWith(SpringRunner.class)
+ @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
+-@ActiveProfiles(Profiles.ACTIVE_DB)
++@ActiveProfiles(resolver = Profiles.ActiveDbProfileResolver.class)
+ public class UserServiceTest {
+ 
+     @Autowired
+Index: src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java	(revision 04eb8d6467d96036963728ee2b9fd7fc2d21afba)
++++ b/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java	(date 1614779051747)
+@@ -9,8 +9,8 @@
+ import org.junit.runner.RunWith;
+ import org.slf4j.Logger;
+ import org.springframework.beans.factory.annotation.Autowired;
+-import org.springframework.test.context.ActiveProfiles;
+ import org.springframework.dao.DataAccessException;
++import org.springframework.test.context.ActiveProfiles;
+ import org.springframework.test.context.ContextConfiguration;
+ import org.springframework.test.context.jdbc.Sql;
+ import org.springframework.test.context.jdbc.SqlConfig;
+@@ -35,7 +35,7 @@
+ })
+ @RunWith(SpringRunner.class)
+ @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
+-@ActiveProfiles(Profiles.ACTIVE_DB)
++@ActiveProfiles(resolver = Profiles.ActiveDbProfileResolver.class)
+ public class MealServiceTest {
+     private static final Logger log = getLogger("result");
+ 
+Index: src/test/java/ru/javawebinar/topjava/Profiles.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/Profiles.java b/src/test/java/ru/javawebinar/topjava/Profiles.java
+--- a/src/test/java/ru/javawebinar/topjava/Profiles.java	(revision 04eb8d6467d96036963728ee2b9fd7fc2d21afba)
++++ b/src/test/java/ru/javawebinar/topjava/Profiles.java	(date 1614779861819)
+@@ -1,5 +1,9 @@
+ package ru.javawebinar.topjava;
+ 
++import org.springframework.lang.NonNull;
++import org.springframework.test.context.ActiveProfilesResolver;
++import org.springframework.util.ClassUtils;
++
+ public class Profiles {
+     public static final String
+             JDBC = "jdbc",
+@@ -11,5 +15,22 @@
+             POSTGRES_DB = "postgres",
+             HSQL_DB = "hsqldb";
+ 
+-    public static final String ACTIVE_DB = POSTGRES_DB;
++    //  Get DB profile depending of DB driver in classpath
++    public static String getActiveDbProfile() {
++        if (ClassUtils.isPresent("org.postgresql.Driver", null)) {
++            return POSTGRES_DB;
++        } else if (ClassUtils.isPresent("org.hsqldb.jdbcDriver", null)) {
++            return HSQL_DB;
++        } else {
++            throw new IllegalStateException("Could not find DB driver");
++        }
++    }
++
++    //http://stackoverflow.com/questions/23871255/spring-profiles-simple-example-of-activeprofilesresolver
++    public static class ActiveDbProfileResolver implements ActiveProfilesResolver {
++        @Override
++        public @NonNull String[] resolve(@NonNull Class<?> aClass) {
++            return new String[]{getActiveDbProfile()};
++        }
++    }
+ }

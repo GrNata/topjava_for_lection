@@ -1,0 +1,177 @@
+Index: src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java	(revision 8c5d03008073c7c0bb106042d88c3dd0fe03ba8f)
++++ b/src/test/java/ru/javawebinar/topjava/service/MealServiceTest.java	(date 1615374617025)
+@@ -15,7 +15,7 @@
+ import org.springframework.test.context.jdbc.Sql;
+ import org.springframework.test.context.jdbc.SqlConfig;
+ import org.springframework.test.context.junit4.SpringRunner;
+-import ru.javawebinar.topjava.Profiles;
++import ru.javawebinar.topjava.ActiveDbProfileResolver;
+ import ru.javawebinar.topjava.model.Meal;
+ import ru.javawebinar.topjava.util.exception.NotFoundException;
+ 
+@@ -35,7 +35,7 @@
+ })
+ @RunWith(SpringRunner.class)
+ @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
+-@ActiveProfiles(resolver = Profiles.ActiveDbProfileResolver.class)
++@ActiveProfiles(resolver = ActiveDbProfileResolver.class)
+ public class MealServiceTest {
+     private static final Logger log = getLogger("result");
+ 
+@@ -122,7 +122,7 @@
+ 
+     @Test
+     public void updateNotOwn() {
+-        NotFoundException exception = assertThrows(NotFoundException.class, () -> service.update(meal1, ADMIN_ID));
++        NotFoundException exception = assertThrows(NotFoundException.class, () -> service.update(getUpdated(), ADMIN_ID));
+         Assert.assertEquals("Not found entity with id=" + MEAL1_ID, exception.getMessage());
+         MEAL_MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID), meal1);
+     }
+Index: src/main/webapp/meals.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/meals.jsp b/src/main/webapp/meals.jsp
+--- a/src/main/webapp/meals.jsp	(revision 8c5d03008073c7c0bb106042d88c3dd0fe03ba8f)
++++ b/src/main/webapp/meals.jsp	(date 1615374717075)
+@@ -1,4 +1,4 @@
+-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
++<%@ page contentType="text/html;charset=UTF-8" %>
+ <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+ <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+ <%@ taglib prefix="fn" uri="http://topjava.javawebinar.ru/functions" %>
+Index: src/main/webapp/mealForm.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/mealForm.jsp b/src/main/webapp/mealForm.jsp
+--- a/src/main/webapp/mealForm.jsp	(revision 8c5d03008073c7c0bb106042d88c3dd0fe03ba8f)
++++ b/src/main/webapp/mealForm.jsp	(date 1615374664370)
+@@ -1,4 +1,4 @@
+-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
++<%@ page contentType="text/html;charset=UTF-8" %>
+ <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+ 
+ <html>
+Index: src/test/java/ru/javawebinar/topjava/Profiles.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/Profiles.java b/src/main/java/ru/javawebinar/topjava/Profiles.java
+rename from src/test/java/ru/javawebinar/topjava/Profiles.java
+rename to src/main/java/ru/javawebinar/topjava/Profiles.java
+--- a/src/test/java/ru/javawebinar/topjava/Profiles.java	(revision 8c5d03008073c7c0bb106042d88c3dd0fe03ba8f)
++++ b/src/main/java/ru/javawebinar/topjava/Profiles.java	(date 1615022768755)
+@@ -1,7 +1,5 @@
+ package ru.javawebinar.topjava;
+ 
+-import org.springframework.lang.NonNull;
+-import org.springframework.test.context.ActiveProfilesResolver;
+ import org.springframework.util.ClassUtils;
+ 
+ public class Profiles {
+@@ -26,12 +24,4 @@
+             throw new IllegalStateException("Could not find DB driver");
+         }
+     }
+-
+-    //http://stackoverflow.com/questions/23871255/spring-profiles-simple-example-of-activeprofilesresolver
+-    public static class ActiveDbProfileResolver implements ActiveProfilesResolver {
+-        @Override
+-        public @NonNull String[] resolve(@NonNull Class<?> aClass) {
+-            return new String[]{getActiveDbProfile()};
+-        }
+-    }
+ }
+Index: src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java b/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java
+--- a/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java	(revision 8c5d03008073c7c0bb106042d88c3dd0fe03ba8f)
++++ b/src/test/java/ru/javawebinar/topjava/service/UserServiceTest.java	(date 1615374617025)
+@@ -11,7 +11,7 @@
+ import org.springframework.test.context.jdbc.Sql;
+ import org.springframework.test.context.jdbc.SqlConfig;
+ import org.springframework.test.context.junit4.SpringRunner;
+-import ru.javawebinar.topjava.Profiles;
++import ru.javawebinar.topjava.ActiveDbProfileResolver;
+ import ru.javawebinar.topjava.UserTestData;
+ import ru.javawebinar.topjava.model.Role;
+ import ru.javawebinar.topjava.model.User;
+@@ -28,7 +28,7 @@
+ })
+ @RunWith(SpringRunner.class)
+ @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
+-@ActiveProfiles(resolver = Profiles.ActiveDbProfileResolver.class)
++@ActiveProfiles(resolver = ActiveDbProfileResolver.class)
+ public class UserServiceTest {
+ 
+     @Autowired
+Index: src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java	(revision 8c5d03008073c7c0bb106042d88c3dd0fe03ba8f)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerSpringTest.java	(date 1615374664376)
+@@ -24,7 +24,7 @@
+     private InMemoryUserRepository repository;
+ 
+     @Before
+-    public void setUp() {
++    public void setup() {
+         repository.init();
+     }
+ 
+Index: src/test/java/ru/javawebinar/topjava/ActiveDbProfileResolver.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/ActiveDbProfileResolver.java b/src/test/java/ru/javawebinar/topjava/ActiveDbProfileResolver.java
+new file mode 100644
+--- /dev/null	(date 1615022764005)
++++ b/src/test/java/ru/javawebinar/topjava/ActiveDbProfileResolver.java	(date 1615022764005)
+@@ -0,0 +1,13 @@
++package ru.javawebinar.topjava;
++
++import org.springframework.lang.NonNull;
++import org.springframework.test.context.ActiveProfilesResolver;
++
++//http://stackoverflow.com/questions/23871255/spring-profiles-simple-example-of-activeprofilesresolver
++public class ActiveDbProfileResolver implements ActiveProfilesResolver {
++    @Override
++    public @NonNull
++    String[] resolve(@NonNull Class<?> aClass) {
++        return new String[]{Profiles.getActiveDbProfile()};
++    }
++}
+Index: src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java	(revision 8c5d03008073c7c0bb106042d88c3dd0fe03ba8f)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/InMemoryAdminRestControllerTest.java	(date 1615374664382)
+@@ -34,7 +34,7 @@
+     }
+ 
+     @Before
+-    public void setUp() {
++    public void setup() {
+         // re-initialize
+         repository.init();
+     }

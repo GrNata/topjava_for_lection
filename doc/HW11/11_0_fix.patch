@@ -1,0 +1,94 @@
+Index: src/main/java/ru/javawebinar/topjava/AuthorizedUser.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/AuthorizedUser.java b/src/main/java/ru/javawebinar/topjava/AuthorizedUser.java
+--- a/src/main/java/ru/javawebinar/topjava/AuthorizedUser.java	(revision b21ffa37684315b307a4e756667d157711626532)
++++ b/src/main/java/ru/javawebinar/topjava/AuthorizedUser.java	(revision 5e8f6ac4dab5b0e91a0c3dbed26bd44a3b8997ea)
+@@ -14,14 +14,15 @@
+ 
+     public AuthorizedUser(User user) {
+         super(user.getEmail(), user.getPassword(), user.isEnabled(), true, true, true, user.getRoles());
+-        this.userTo = UserUtil.asTo(user);
++        setTo(UserUtil.asTo(user));
+     }
+ 
+     public int getId() {
+         return userTo.id();
+     }
+ 
+-    public void update(UserTo newTo) {
++    public void setTo(UserTo newTo) {
++        newTo.setPassword(null);
+         userTo = newTo;
+     }
+ 
+Index: src/main/java/ru/javawebinar/topjava/web/user/ProfileUIController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ru/javawebinar/topjava/web/user/ProfileUIController.java b/src/main/java/ru/javawebinar/topjava/web/user/ProfileUIController.java
+--- a/src/main/java/ru/javawebinar/topjava/web/user/ProfileUIController.java	(revision b21ffa37684315b307a4e756667d157711626532)
++++ b/src/main/java/ru/javawebinar/topjava/web/user/ProfileUIController.java	(revision 5e8f6ac4dab5b0e91a0c3dbed26bd44a3b8997ea)
+@@ -27,7 +27,7 @@
+             return "profile";
+         } else {
+             super.update(userTo, SecurityUtil.authUserId());
+-            SecurityUtil.get().update(userTo);
++            SecurityUtil.get().setTo(userTo);
+             status.setComplete();
+             return "redirect:/meals";
+         }
+Index: src/main/webapp/WEB-INF/jsp/login.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/WEB-INF/jsp/login.jsp b/src/main/webapp/WEB-INF/jsp/login.jsp
+--- a/src/main/webapp/WEB-INF/jsp/login.jsp	(revision b21ffa37684315b307a4e756667d157711626532)
++++ b/src/main/webapp/WEB-INF/jsp/login.jsp	(revision 5e8f6ac4dab5b0e91a0c3dbed26bd44a3b8997ea)
+@@ -14,7 +14,7 @@
+             <div class="error">${sessionScope["SPRING_SECURITY_LAST_EXCEPTION"].message}</div>
+         </c:if>
+         <c:if test="${not empty param.message}">
+-            <div class="message"><spring:message code="${param.message}"/></div>
++            <div class="message"><spring:message code="${param.message}" text=""/></div>
+         </c:if>
+         <sec:authorize access="isAnonymous()">
+             <div class="pt-2">
+Index: src/main/webapp/resources/css/style.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/webapp/resources/css/style.css b/src/main/webapp/resources/css/style.css
+--- a/src/main/webapp/resources/css/style.css	(revision b21ffa37684315b307a4e756667d157711626532)
++++ b/src/main/webapp/resources/css/style.css	(revision 5e8f6ac4dab5b0e91a0c3dbed26bd44a3b8997ea)
+@@ -38,7 +38,7 @@
+     min-height: 100%;
+ }
+ body {
+-    margin-bottom: 60px; /* Margin bottom by footer height */
++    margin-bottom: 60px !important; /* Margin bottom by footer height */
+ }
+ .footer {
+     position: absolute;
+Index: src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java
+--- a/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(revision b21ffa37684315b307a4e756667d157711626532)
++++ b/src/test/java/ru/javawebinar/topjava/web/user/ProfileRestControllerTest.java	(revision 5e8f6ac4dab5b0e91a0c3dbed26bd44a3b8997ea)
+@@ -59,7 +59,7 @@
+                 .andExpect(status().isCreated());
+ 
+         User created = readFromJson(action, User.class);
+-        int newId = created.getId();
++        int newId = created.id();
+         newUser.setId(newId);
+         USER_MATCHER.assertMatch(created, newUser);
+         USER_MATCHER.assertMatch(userService.get(newId), newUser);
