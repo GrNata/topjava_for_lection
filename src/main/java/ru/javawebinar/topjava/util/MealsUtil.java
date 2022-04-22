@@ -64,7 +64,6 @@ public class MealsUtil {
 //                        Collectors.toMap(Meal::getDate, Meal::getCalories, Integer::sum)
                 );
 
-
         return meals.stream()
                 .filter(userMeal -> TimeUtil.isBetweenHalfOpen(userMeal.getDateTime().toLocalTime(), startTime, endTime))
                 .map(meal -> createTo(meal, (map.get(meal.getDate()) > caloriesPerDay)))
